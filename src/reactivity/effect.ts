@@ -3,8 +3,8 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-03-21 14:49:18
- * @LastEditTime: 2022-03-31 00:13:27
- * @FilePath: \mini-vue3\src\reactivity\effect.ts
+ * @LastEditTime: 2022-03-31 16:03:28
+ * @FilePath: /mini-vue3/src/reactivity/effect.ts
  */
 
 /**
@@ -18,12 +18,14 @@ const targetsMap = new WeakMap();
 let activeEffect: ReactiveEffect;
 class ReactiveEffect {
   private _fn: any;
-  constructor(fn) {
+
+  // 构造函数接受可选的第二个参数，保存为实例的公共变量 scheduler
+  constructor(fn, public scheduler?) {
     this._fn = fn;
   }
   run() {
     activeEffect = this;
-    this._fn();
+    return this._fn();
   }
 }
 
@@ -33,7 +35,7 @@ function track(target, key) {
     targetsMap.get(target);
   if (!depsMap) {
     depsMap = new Map<any, Set<ReactiveEffect>>();
-    targetsMap.set(target,depsMap)
+    targetsMap.set(target, depsMap);
   }
 
   // 获取当前 property 对应的 Set 实例，若为 undefined 则进行初始化并保存到 depsMap 中
@@ -59,13 +61,30 @@ function trigger(target, key) {
   const deps: Set<ReactiveEffect> = depsMap.get(key)!;
 
   for (const reactiveEffect of deps) {
-    reactiveEffect.run();
+    if (reactiveEffect.scheduler) {
+      reactiveEffect.scheduler();
+    } else {
+      reactiveEffect.run();
+    }
   }
 }
 
-function effect(fn) {
-  const _effect: ReactiveEffect = new ReactiveEffect(fn);
-  _effect.run();
+// 用于停止传入的函数的执行
+function stop(runner) {
+  runner.effect.stop();
 }
 
-export { track, trigger, effect };
+interface EffectOptions {
+  scheduler?: Function;
+}
+
+function effect(fn, options: EffectOptions = {}) {
+  const _effect: ReactiveEffect = new ReactiveEffect(fn, options.scheduler);
+  _effect.run();
+  const runner: any = _effect.run.bind(_effect);
+  // 将 _effect 赋值给 runner 的 effect property
+  runner.effect = _effect;
+  return runner;
+}
+
+export { track, trigger, effect, stop };

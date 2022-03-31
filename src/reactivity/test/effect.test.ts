@@ -1,4 +1,4 @@
-import { effect } from '../effect';
+import { effect, stop } from '../effect';
 import { reactive } from '../reactive';
 
 /*
@@ -6,8 +6,8 @@ import { reactive } from '../reactive';
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-03-21 14:49:01
- * @LastEditTime: 2022-03-31 15:44:12
- * @FilePath: /mini-vue3/src/reactivity/test/effect.test.ts
+ * @LastEditTime: 2022-04-01 00:02:12
+ * @FilePath: \mini-vue3\src\reactivity\test\effect.test.ts
  */
 describe('effect', () => {
   it('should run the passed function once (wrapped by a effect)', () => {
@@ -70,4 +70,38 @@ describe('effect', () => {
     expect(scheduler).toHaveBeenCalledTimes(1);
     expect(dummy).toBe(2);
   });
+
+  it('stop', () => {
+    let dummy;
+    const obj = reactive({ prop: 1 });
+    const runner = effect(() => {
+      dummy = obj.prop;
+    });
+    obj.prop = 2;
+    expect(dummy).toBe(2);
+    // 调用 stop 后，当传入的函数依赖的响应式对象的 property 的值更新时不会再执行该函数
+    stop(runner);
+
+    obj.prop = 3;
+
+    expect(dummy).toBe(2);
+    obj.prop++;
+    expect(dummy).toBe(2);
+    // 只有当调用`runner`时才会恢复执行该函数
+    runner();
+    expect(dummy).toBe(4);
+  });
+
+
+  it('events: onStop', () => {
+    // 创建 mock 函数
+    const onStop = jest.fn()
+    const runner = effect(() => {}, {
+      onStop
+    })
+
+    // 调用 stop 时，会执行 onStop 方法
+    stop(runner)
+    expect(onStop).toHaveBeenCalled()
+  })
 });

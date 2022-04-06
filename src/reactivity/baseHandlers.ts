@@ -3,10 +3,12 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-01 10:48:05
- * @LastEditTime: 2022-04-01 14:18:00
+ * @LastEditTime: 2022-04-06 10:15:25
  * @FilePath: /mini-vue3/src/reactivity/baseHandlers.ts
  */
 import { track, trigger } from './effect';
+import { reactive } from './reactive';
+import { readonly } from './readonly';
 
 // 用于保存 isReactive 和 isReadonly 中使用的特殊 property 的名
 export const enum ReactiveFlags {
@@ -17,9 +19,13 @@ export const enum ReactiveFlags {
 const get = createGetter();
 const set = createSetter();
 const readonlyGet = createGetter(true);
+const shallowGet = createGetter(false, true);
+const shallowReadonlyGet = createGetter(false, true);
+
+export const isObject = value => typeof value === 'object' && value !== null;
 
 // 用于生成 get 函数的工具函数
-function createGetter(isReadonly = false) {
+function createGetter(isReadonly = false, shallow = false) {
   return function (target, key) {
     // 当 property 名为 __v_isReactive 时，表明正在调用 isReactive，直接返回 !isReadonly
     if (key === ReactiveFlags.IS_REACTIVE) {
@@ -31,10 +37,17 @@ function createGetter(isReadonly = false) {
     }
 
     const res = Reflect.get(target, key);
+
     // 利用 reactive 进行响应式转换时才进行依赖收集
     if (!isReadonly) {
       track(target, key);
     }
+
+    // 是否需要嵌套响应
+    if (isObject(res) && !shallow) {
+      return isReadonly ? readonly(res) : reactive(res);
+    }
+
     return res;
   };
 }
@@ -67,6 +80,14 @@ export const readonlyHandlers = {
     return true;
   },
 };
+
+export const shallowHandlers = Object.assign({}, mutableHandlers, {
+  get: shallowGet,
+});
+
+export const shallowReadonlyHandlers = Object.assign({}, mutableHandlers, {
+  get: shallowReadonlyGet,
+});
 
 export function createReactiveObject<T extends Object>(
   raw: T,

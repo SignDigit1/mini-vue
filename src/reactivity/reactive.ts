@@ -3,17 +3,22 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-03-21 14:35:45
- * @LastEditTime: 2022-04-01 14:51:52
+ * @LastEditTime: 2022-04-06 10:08:05
  * @FilePath: /mini-vue3/src/reactivity/reactive.ts
  */
 import {
   createReactiveObject,
   mutableHandlers,
   ReactiveFlags,
+  shallowHandlers,
 } from './baseHandlers';
 import { isReadonly } from './readonly';
 function reactive(raw: any) {
   return createReactiveObject(raw, mutableHandlers);
+}
+
+function shallowReactive(raw) {
+  return createReactiveObject(raw, shallowHandlers);
 }
 
 // 用于检查对象是否是由 reactive 创建的响应式对象
@@ -26,4 +31,4 @@ function isProxy(value) {
   return isReactive(value) || isReadonly(value);
 }
 
-export { reactive, isReactive, isProxy };
+export { reactive, isReactive, isProxy, shallowReactive };

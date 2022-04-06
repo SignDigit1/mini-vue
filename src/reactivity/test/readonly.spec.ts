@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-01 10:14:00
- * @LastEditTime: 2022-04-01 14:52:44
+ * @LastEditTime: 2022-04-06 09:45:13
  * @FilePath: /mini-vue3/src/reactivity/test/readonly.spec.ts
  */
 import { readonly, isReadonly } from '../readonly';
@@ -39,4 +39,11 @@ describe('reactivity/readonly', () => {
     // 修改 readonly 响应式对象的 property 的值时会调用 console.warn 发出警告
     expect(console.warn).toBeCalled();
   });
+
+  it('should make nested values readonly', () => {
+    const original = { foo: { bar: 1 } }
+    const wrapped = readonly(original)
+    // 嵌套对象是响应式的
+    expect(isReadonly(wrapped.foo)).toBe(true)
+  })
 });

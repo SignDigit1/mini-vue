@@ -3,16 +3,21 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-01 10:23:46
- * @LastEditTime: 2022-04-01 14:39:44
+ * @LastEditTime: 2022-04-06 10:08:42
  * @FilePath: /mini-vue3/src/reactivity/readonly.ts
  */
 import {
   createReactiveObject,
   ReactiveFlags,
   readonlyHandlers,
+  shallowReadonlyHandlers,
 } from './baseHandlers';
 function readonly<T extends Object>(raw: T): T {
   return createReactiveObject(raw, readonlyHandlers);
+}
+
+function shallowReadonly(raw) {
+  return createReactiveObject(raw, shallowReadonlyHandlers);
 }
 
 // 用于检查对象是否是由 readonly 创建的 readonly 响应式对象
@@ -21,4 +26,4 @@ function isReadonly(value) {
   return !!value[ReactiveFlags.IS_READONLY];
 }
 
-export { readonly, isReadonly };
+export { readonly, isReadonly, shallowReadonly };

@@ -6,7 +6,7 @@ import { toReactive } from './reactive';
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:18:21
- * @LastEditTime: 2022-04-07 16:03:47
+ * @LastEditTime: 2022-04-07 16:18:02
  * @FilePath: /mini-vue3/src/reactivity/ref.ts
  */
 interface Ref {
@@ -18,6 +18,7 @@ class RefImpl implements Ref {
   private _rawValue;
   private _value;
   private deps;
+  public __v_isRef = true;
   constructor(value) {
     // 将传入的值赋值给实例的私有 property _rawValue
     this._rawValue = value;
@@ -45,7 +46,19 @@ class RefImpl implements Ref {
   }
 }
 
-export function ref(value): Ref {
+function ref(value): Ref {
   // 返回 RefImpl 类的实例，即 ref 对象
   return new RefImpl(value);
 }
+
+// 用于判断一个值是否是 ref 对象
+function isRef(value): boolean {
+  return !!value.__v_isRef;
+}
+
+// 用于获取 ref 对象的 value property 的值
+function unref(ref) {
+  return isRef(ref) ? ref.value : ref;
+}
+
+export { ref, isRef, unref };

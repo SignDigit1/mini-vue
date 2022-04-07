@@ -3,11 +3,12 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:32:28
- * @LastEditTime: 2022-04-07 16:05:49
+ * @LastEditTime: 2022-04-07 16:31:10
  * @FilePath: /mini-vue3/src/reactivity/test/ref.spec.ts
  */
 import { effect } from '../effect';
-import { ref } from '../ref';
+import { reactive } from '../reactive';
+import { ref, isRef, unref } from '../ref';
 
 describe('reactivity/ref', () => {
   it('should hold a value', () => {
@@ -52,5 +53,17 @@ describe('reactivity/ref', () => {
     // ref 对象的 value property 的是一个响应式对象
     a.value.count = 2;
     expect(dummy).toBe(2);
+  });
+
+  it('isRef', () => {
+    expect(isRef(ref(1))).toBe(true);
+    expect(isRef(reactive({ foo: 1 }))).toBe(false);
+    expect(isRef(0)).toBe(false);
+    expect(isRef({ bar: 0 })).toBe(false);
+  });
+
+  it('unref', () => {
+    expect(unref(1)).toBe(1);
+    expect(unref(ref(1))).toBe(1);
   });
 });

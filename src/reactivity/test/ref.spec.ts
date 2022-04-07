@@ -3,12 +3,12 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:32:28
- * @LastEditTime: 2022-04-07 16:31:10
- * @FilePath: /mini-vue3/src/reactivity/test/ref.spec.ts
+ * @LastEditTime: 2022-04-07 23:48:01
+ * @FilePath: \mini-vue3\src\reactivity\test\ref.spec.ts
  */
 import { effect } from '../effect';
 import { reactive } from '../reactive';
-import { ref, isRef, unref } from '../ref';
+import { ref, isRef, unref,proxyRefs } from '../ref';
 
 describe('reactivity/ref', () => {
   it('should hold a value', () => {
@@ -66,4 +66,23 @@ describe('reactivity/ref', () => {
     expect(unref(1)).toBe(1);
     expect(unref(ref(1))).toBe(1);
   });
+
+  describe('reactivity/ref', () => {
+    it('proxyRefs', () => {
+      const obj = {
+        foo: ref(1),
+        bar: 'baz'
+      }
+      const proxyObj = proxyRefs(obj)
+      expect(proxyObj.foo).toBe(1)
+      expect(proxyObj.bar).toBe('baz')
+  
+      proxyObj.foo = 2
+      expect(proxyObj.foo).toBe(2)
+  
+      proxyObj.foo = ref(3)
+      expect(proxyObj.foo).toBe(3)
+    })
+  })
+  
 });

@@ -6,8 +6,8 @@ import { toReactive } from './reactive';
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:18:21
- * @LastEditTime: 2022-04-07 16:18:02
- * @FilePath: /mini-vue3/src/reactivity/ref.ts
+ * @LastEditTime: 2022-04-07 23:46:43
+ * @FilePath: \mini-vue3\src\reactivity\ref.ts
  */
 interface Ref {
   value: any;
@@ -61,4 +61,23 @@ function unref(ref) {
   return isRef(ref) ? ref.value : ref;
 }
 
-export { ref, isRef, unref };
+function proxyRefs(objectWithRefs) {
+  // 返回 Proxy 的实例
+  return new Proxy(objectWithRefs, {
+    get: function (target, key) {
+      // 获取传入的对象的 property 的值，再调用 unref 进行处理
+      return unref(Reflect.get(target, key));
+    },
+    set: function (target, key, value) {
+      const oldValue = target[key];
+      // 若传入的对象的 property 的值是一个 ref 对象，而 set 的值不是一个 ref 对象，则修改该 ref 对象的值，否则直接修改 property 的值
+      if (isRef(oldValue) && !isRef(value)) {
+        oldValue.value = value;
+        return true;
+      }
+      return Reflect.set(target, key, value);
+    },
+  });
+}
+
+export { ref, isRef, unref, proxyRefs };

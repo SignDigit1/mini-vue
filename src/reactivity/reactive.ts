@@ -3,11 +3,12 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-03-21 14:35:45
- * @LastEditTime: 2022-04-06 10:08:05
+ * @LastEditTime: 2022-04-07 16:01:46
  * @FilePath: /mini-vue3/src/reactivity/reactive.ts
  */
 import {
   createReactiveObject,
+  isObject,
   mutableHandlers,
   ReactiveFlags,
   shallowHandlers,
@@ -27,8 +28,15 @@ function isReactive(value) {
   return !!value[ReactiveFlags.IS_REACTIVE];
 }
 
+function toReactive(value) {
+  if (isObject(value)) {
+    return reactive(value);
+  }
+  return value;
+}
+
 function isProxy(value) {
   return isReactive(value) || isReadonly(value);
 }
 
-export { reactive, isReactive, isProxy, shallowReactive };
+export { reactive, isReactive, isProxy, shallowReactive, toReactive };

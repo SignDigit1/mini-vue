@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:32:28
- * @LastEditTime: 2022-04-07 15:51:21
+ * @LastEditTime: 2022-04-07 16:05:49
  * @FilePath: /mini-vue3/src/reactivity/test/ref.spec.ts
  */
 import { effect } from '../effect';
@@ -37,6 +37,20 @@ describe('reactivity/ref', () => {
     // ref 对象的 value property 的 set 具有缓存，不会重复触发依赖
     a.value = 2;
     expect(calls).toBe(2);
+    expect(dummy).toBe(2);
+  });
+
+  it('should make nested properties reactive', () => {
+    const a = ref({
+      count: 1,
+    });
+    let dummy;
+    effect(() => {
+      dummy = a.value.count;
+    });
+    expect(dummy).toBe(1);
+    // ref 对象的 value property 的是一个响应式对象
+    a.value.count = 2;
     expect(dummy).toBe(2);
   });
 });

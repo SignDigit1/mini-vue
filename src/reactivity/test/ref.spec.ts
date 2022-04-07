@@ -1,13 +1,14 @@
-import { effect } from '../effect';
-
 /*
  * @Author: jun.fu<fujunchn@qq.com>
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:32:28
- * @LastEditTime: 2022-04-06 10:36:02
+ * @LastEditTime: 2022-04-07 15:51:21
  * @FilePath: /mini-vue3/src/reactivity/test/ref.spec.ts
  */
+import { effect } from '../effect';
+import { ref } from '../ref';
+
 describe('reactivity/ref', () => {
   it('should hold a value', () => {
     // 创建 ref 对象

@@ -3,8 +3,8 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-03-21 14:49:18
- * @LastEditTime: 2022-04-01 00:03:08
- * @FilePath: \mini-vue3\src\reactivity\effect.ts
+ * @LastEditTime: 2022-04-07 15:48:25
+ * @FilePath: /mini-vue3/src/reactivity/effect.ts
  */
 
 /**
@@ -48,7 +48,7 @@ class ReactiveEffect {
   stop() {
     if (this.active) {
       cleanupEffect(this);
-      
+
       // 在调用 stop 方法时，调用 onStop 方法
       this.onStop?.();
 
@@ -65,8 +65,25 @@ function cleanupEffect(effect: ReactiveEffect) {
   });
 }
 
+// 用于判断是否应该收集依赖
+function isTracking() {
+  return shouldTrack && activeEffect !== undefined;
+}
+
+// 用于将当前正在执行的 ReactiveEffect 类的实例添加到 dep 中， 同时将 dep 添加到当前正在执行的 ReactiveEffect 类的实例的 deps property 中
+function trackEffects(deps) {
+  // 若 deps 中包括当前正在执行的 ReactiveEffect 类的实例则直接返回
+  if (deps.has(activeEffect)) {
+    return;
+  }
+  // 将当前正在执行的 ReactiveEffect 类的实例添加到 deps 中
+  deps.add(activeEffect);
+
+  activeEffect?.deps.push(deps);
+}
+
 function track(target, key) {
-  if (!shouldTrack || activeEffect === undefined) {
+  if (!isTracking()) {
     return;
   }
   // 获取当前响应式对象对应的 Map 实例,若为 undefined 则进行初始化并保存到 targetsMap 中
@@ -84,14 +101,18 @@ function track(target, key) {
     depsMap.set(key, deps);
   }
 
-  // 若 deps 中包括当前正在执行的 ReactiveEffect 类的实例则直接返回
-  if (deps.has(activeEffect)) {
-    return;
-  }
-  // 将当前正在执行的 ReactiveEffect 类的实例添加到 deps 中
-  deps.add(activeEffect);
+  trackEffects(deps);
+}
 
-  activeEffect?.deps.push(deps);
+// 用于遍历 dep，调用每一个 ReactiveEffect 类的实例的 scheduler 方法或 run 方法
+function triggerEffects(deps) {
+  for (const reactiveEffect of deps) {
+    if (reactiveEffect.scheduler) {
+      reactiveEffect.scheduler();
+    } else {
+      reactiveEffect.run();
+    }
+  }
 }
 
 function trigger(target, key) {
@@ -100,14 +121,7 @@ function trigger(target, key) {
 
   // 获取当前 property 对应的 Set 实例
   const deps: Set<ReactiveEffect> = depsMap.get(key)!;
-
-  for (const reactiveEffect of deps) {
-    if (reactiveEffect.scheduler) {
-      reactiveEffect.scheduler();
-    } else {
-      reactiveEffect.run();
-    }
-  }
+  triggerEffects(deps);
 }
 
 // 用于停止传入的函数的执行
@@ -130,4 +144,12 @@ function effect(fn, options: EffectOptions = {}) {
   return runner;
 }
 
-export { track, trigger, effect, stop };
+export {
+  track,
+  trigger,
+  effect,
+  stop,
+  isTracking,
+  trackEffects,
+  triggerEffects,
+};

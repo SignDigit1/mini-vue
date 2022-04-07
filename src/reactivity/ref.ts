@@ -1,9 +1,11 @@
+import { isTracking, trackEffects, triggerEffects } from './effect';
+
 /*
  * @Author: jun.fu<fujunchn@qq.com>
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:18:21
- * @LastEditTime: 2022-04-06 10:54:53
+ * @LastEditTime: 2022-04-07 15:50:35
  * @FilePath: /mini-vue3/src/reactivity/ref.ts
  */
 interface Ref {
@@ -13,16 +15,26 @@ interface Ref {
 // Ref 接口的实现类，对操作进行封装
 class RefImpl implements Ref {
   private _value;
+  private deps;
   constructor(value) {
     this._value = value;
+    this.deps = new Set();
   }
   get value() {
-    // TODO 收集依赖
+    // 收集依赖
+    if (isTracking()) {
+      trackEffects(this.deps);
+    }
     return this._value;
   }
   set value(newVal) {
-    // TODO 触发依赖
+    if (newVal === this._value) {
+      return;
+    }
+
     this._value = newVal;
+    //  触发依赖
+    triggerEffects(this.deps);
   }
 }
 

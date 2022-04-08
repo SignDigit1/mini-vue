@@ -6,8 +6,8 @@ import { toReactive } from './reactive';
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-06 10:18:21
- * @LastEditTime: 2022-04-07 23:46:43
- * @FilePath: \mini-vue3\src\reactivity\ref.ts
+ * @LastEditTime: 2022-04-08 09:45:04
+ * @FilePath: /mini-vue3/src/reactivity/ref.ts
  */
 interface Ref {
   value: any;
@@ -80,4 +80,4 @@ function proxyRefs(objectWithRefs) {
   });
 }
 
-export { ref, isRef, unref, proxyRefs };
+export { Ref, ref, isRef, unref, proxyRefs };

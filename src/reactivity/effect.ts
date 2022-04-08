@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-03-21 14:49:18
- * @LastEditTime: 2022-04-07 15:48:25
+ * @LastEditTime: 2022-04-08 09:44:19
  * @FilePath: /mini-vue3/src/reactivity/effect.ts
  */
 
@@ -152,4 +152,5 @@ export {
   isTracking,
   trackEffects,
   triggerEffects,
+  ReactiveEffect
 };

@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-11 23:38:25
+ * @LastEditTime: 2022-04-11 23:49:47
  * @FilePath: \mini-vue3\src\runtime-core\render.ts
  */
 
@@ -40,6 +40,9 @@ function processComponent(vnode: VNode, container) {
   mountComponent(vnode, container);
 }
 
+// 用于通过正则判断该 property 的 key 是否以 on 开头，是则为注册事件，否则为 attribute 或 property
+const isOn = (key: string) => /^on[A-Z]/.test(key);
+
 // 用于进行 Element 的初始化
 function mountElement(vnode, container) {
   // 根据 Element 对应 VNode 的 type property 创建 DOM 元素并赋值给变量 el
@@ -50,9 +53,21 @@ function mountElement(vnode, container) {
 
   // 遍历 props，利用 Element.setAttribute() 将其中的 property 添加到 el 上
   // 其中 key 作为 el 的 attribute 或 property 名，value 作为 attribute 或 property 的值
+
   for (const key in props) {
     const val = props[key];
-    el.setAttribute(key, val);
+
+    // 若为注册事件
+    if (isOn(key)) {
+      // 利用 Element.addEventListener() 将该 property 添加到 el 上
+      // 其中 key 去掉前两位（也就是 on）再转为小写后的字符串作为事件名，value 作为 listener
+      const event = key.slice(2).toLowerCase();
+      el.addEventListener(event, val);
+    } else {
+      // 利用 Element.setAttribute() 将该 property 添加到 el 上
+      // 其中 key 作为 el 的 attribute 或 property 名，value 作为 attribute 或 property 的值
+      el.setAttribute(key, val);
+    }
   }
 
   // 通过 VNode shapeFlag property 与枚举变量 ShapeFlags 进行与运算来判断 children 类型

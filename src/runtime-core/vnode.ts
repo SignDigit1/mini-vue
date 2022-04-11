@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 15:53:33
- * @LastEditTime: 2022-04-08 16:01:43
+ * @LastEditTime: 2022-04-11 16:43:33
  * @FilePath: /mini-vue3/src/runtime-core/vnode.ts
  */
 interface VNode {
@@ -13,6 +13,7 @@ interface VNode {
   props: object;
   /* 子代 VNode，使用 h 生成，或者使用字符串来获取“文本 VNode”，或带有插槽的对象。可选。 */
   children: string | Array<VNode> | object;
+  el?: Element;
 }
 
 function createVNode(type, props?, children?): VNode {

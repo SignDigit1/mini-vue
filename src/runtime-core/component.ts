@@ -3,9 +3,10 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-11 17:47:14
+ * @LastEditTime: 2022-04-11 18:13:54
  * @FilePath: /mini-vue3/src/runtime-core/component.ts
  */
+import { PublicInstanceHandlers } from './componentPublicInstance';
 import { patch } from './render';
 import { VNode } from './vnode';
 
@@ -38,25 +39,7 @@ function setupStatefulComponent(instance) {
   const Component = instance.type;
 
   // 利用 Proxy 对组件实例对象的 proxy property 的 get 进行代理
-  instance.proxy = new Proxy(
-    {},
-    {
-      get(target, key) {
-        // 通过解构赋值获取组件实例对象的 setupState property
-        const { setupState } = instance;
-
-        // 若组件实例对象的 setupState property 上有该 property 则返回其值
-        if (key in setupState) {
-          return setupState[key];
-        }
-
-        // 若获取 $el property 则返回 VNode 的 el property
-        if (key === '$el') {
-          return instance.vnode.el;
-        }
-      },
-    }
-  );
+  instance.proxy = new Proxy({ _: instance }, PublicInstanceHandlers);
 
   // 通过解构赋值获取组件选项对象中的 setup 方法
   const { setup } = Component;

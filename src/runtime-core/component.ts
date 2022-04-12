@@ -3,10 +3,11 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-12 23:13:18
+ * @LastEditTime: 2022-04-13 00:15:50
  * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
 import { shallowReadonly } from '../reactivity/readonly';
+import { emit } from './componentEmit';
 import { initProps } from './componentProps';
 import { PublicInstanceHandlers } from './componentPublicInstance';
 import { patch } from './render';
@@ -24,7 +25,11 @@ function createComponentInstance(vnode: VNode): Component {
     type: vnode.type,
     setupState: {},
     props: {},
+    emit: () => {},
   };
+
+  // 通过 Function.prototype.bind() 将 emit 函数第一个参数指定为组件实例对象，将新函数挂载到组件实例对象上
+  component.emit = emit.bind(component) as any;
   return component;
 }
 
@@ -50,7 +55,10 @@ function setupStatefulComponent(instance) {
 
   // 若组件选项对象中包含 setup 方法则调用该方法并处理其返回值
   if (setup) {
-    const setupResult = setup(shallowReadonly(instance.props));
+    // 调用 setup 传入 props 对象的 shallowReactive 响应式副本和包含 emit 方法的对象并获取其返回值
+    const setupResult = setup(shallowReadonly(instance.props), {
+      emit: instance.emit,
+    });
     // 处理 setup 方法的返回值
     handleSetupResult(instance, setupResult);
   }

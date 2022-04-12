@@ -3,8 +3,8 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-01 10:48:05
- * @LastEditTime: 2022-04-06 10:15:25
- * @FilePath: /mini-vue3/src/reactivity/baseHandlers.ts
+ * @LastEditTime: 2022-04-12 23:30:31
+ * @FilePath: \mini-vue3\src\reactivity\baseHandlers.ts
  */
 import { track, trigger } from './effect';
 import { reactive } from './reactive';
@@ -85,7 +85,7 @@ export const shallowHandlers = Object.assign({}, mutableHandlers, {
   get: shallowGet,
 });
 
-export const shallowReadonlyHandlers = Object.assign({}, mutableHandlers, {
+export const shallowReadonlyHandlers = Object.assign({}, readonlyHandlers, {
   get: shallowReadonlyGet,
 });
 

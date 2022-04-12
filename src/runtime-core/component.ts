@@ -3,9 +3,11 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-11 18:13:54
- * @FilePath: /mini-vue3/src/runtime-core/component.ts
+ * @LastEditTime: 2022-04-12 23:13:18
+ * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
+import { shallowReadonly } from '../reactivity/readonly';
+import { initProps } from './componentProps';
 import { PublicInstanceHandlers } from './componentPublicInstance';
 import { patch } from './render';
 import { VNode } from './vnode';
@@ -21,13 +23,15 @@ function createComponentInstance(vnode: VNode): Component {
     vnode,
     type: vnode.type,
     setupState: {},
+    props: {},
   };
   return component;
 }
 
 // 用于初始化 props、初始化 slots 和调用 setup 方法以及设置 render 函数
 function setupComponent(instance) {
-  // TODO: 调用 initProps
+  // 调用 initProps, 将组件对应 VNode 的 props property 挂载到组件实例对象上
+  initProps(instance, instance.vnode.props);
   // TODO: 调用 initSlots
 
   setupStatefulComponent(instance);
@@ -46,7 +50,7 @@ function setupStatefulComponent(instance) {
 
   // 若组件选项对象中包含 setup 方法则调用该方法并处理其返回值
   if (setup) {
-    const setupResult = setup();
+    const setupResult = setup(shallowReadonly(instance.props));
     // 处理 setup 方法的返回值
     handleSetupResult(instance, setupResult);
   }

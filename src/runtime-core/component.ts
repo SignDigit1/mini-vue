@@ -3,12 +3,13 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-13 00:15:50
+ * @LastEditTime: 2022-04-13 23:20:40
  * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
 import { shallowReadonly } from '../reactivity/readonly';
 import { emit } from './componentEmit';
 import { initProps } from './componentProps';
+import { initSlots } from './componentSlots';
 import { PublicInstanceHandlers } from './componentPublicInstance';
 import { patch } from './render';
 import { VNode } from './vnode';
@@ -26,6 +27,7 @@ function createComponentInstance(vnode: VNode): Component {
     setupState: {},
     props: {},
     emit: () => {},
+    slots: {},
   };
 
   // 通过 Function.prototype.bind() 将 emit 函数第一个参数指定为组件实例对象，将新函数挂载到组件实例对象上
@@ -37,7 +39,8 @@ function createComponentInstance(vnode: VNode): Component {
 function setupComponent(instance) {
   // 调用 initProps, 将组件对应 VNode 的 props property 挂载到组件实例对象上
   initProps(instance, instance.vnode.props);
-  // TODO: 调用 initSlots
+  // 将 children 挂载到组件实例对象的 slots property 上
+  initSlots(instance, instance.vnode.children);
 
   setupStatefulComponent(instance);
 }

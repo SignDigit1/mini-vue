@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 18:10:10
- * @LastEditTime: 2022-04-12 23:35:49
+ * @LastEditTime: 2022-04-13 23:29:13
  * @FilePath: \mini-vue3\src\runtime-core\componentPublicInstance.ts
  */
 
@@ -12,6 +12,7 @@ import { hasOwn } from '../shared/index';
 // 用于保存组件实例对象 property 及对应的 getter
 const publicPropertiesMap = {
   $el: i => i.vnode.el,
+  $slots: i => i.slots,
 };
 
 const PublicInstanceHandlers = {

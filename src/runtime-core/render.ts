@@ -3,8 +3,8 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-11 23:49:47
- * @FilePath: \mini-vue3\src\runtime-core\render.ts
+ * @LastEditTime: 2022-04-18 17:12:26
+ * @FilePath: /mini-vue3/src/runtime-core/render.ts
  */
 
 import {
@@ -13,21 +13,36 @@ import {
   setupRenderEffect,
 } from './component';
 import { ShapeFlags } from './ShapeFlags';
-import { VNode } from './vnode';
+import { Fragment, VNode } from './vnode';
 
 // 用于处理组件对应的 VNode
 function patch(vnode: VNode, container) {
   // 根据 VNode 类型的不同调用不同的函数
   // 通过 VNode shapeFlag property 与枚举变量 ShapeFlags 进行与运算来判断 VNode 类型
   // 根据 Element 对应 VNode 的 type property 创建 DOM 元素并同时赋值给变量 el 和 VNode 的 el property
-  const { shapeFlag } = vnode;
-  if (shapeFlag & ShapeFlags.ELEMENT) {
-    processElement(vnode, container);
+  const { type, shapeFlag } = vnode;
+
+  // 通过 VNode 的 type property 判断 VNode 类型是 Fragment 或其他
+  switch (type) {
+    case Fragment:
+      processFragment(vnode, container);
+      break;
+
+    default:
+      if (shapeFlag & ShapeFlags.ELEMENT) {
+        processElement(vnode, container);
+      }
+      // 若 type property 的类型是 object，则 VNode 类型是 Component
+      else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+        processComponent(vnode, container);
+      }
+      break;
   }
-  // 若 type property 的类型是 object，则 VNode 类型是 Component
-  else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-    processComponent(vnode, container);
-  }
+}
+
+// 用于处理 Fragment
+function processFragment(vnode: VNode, container) {
+  mountChildren(vnode.children, container);
 }
 
 // 用于处理 Element

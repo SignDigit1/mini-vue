@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-12 09:37:54
- * @LastEditTime: 2022-04-18 16:30:57
+ * @LastEditTime: 2022-04-18 17:14:30
  * @FilePath: /mini-vue3/example/Component-slots/Foo.js
  */
 /* Foo.js */
@@ -19,7 +19,7 @@ export const Foo = {
     // 通过 this.$slots 获取父组件传递的插槽
     return h('div', {}, [
       h('p', {}, 'Foo component'),
-      h('div', {}, [renderSlots(this.$slots)]),
+      h('div', {}, renderSlots(this.$slots)),
     ]);
   },
 };

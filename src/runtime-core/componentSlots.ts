@@ -3,10 +3,11 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-13 23:15:34
- * @LastEditTime: 2022-04-18 16:44:30
+ * @LastEditTime: 2022-04-18 17:18:28
  * @FilePath: /mini-vue3/src/runtime-core/componentSlots.ts
  */
 import { ShapeFlags } from './ShapeFlags';
+import { createVNode, Fragment } from './vnode';
 // 用于将 children 赋值给组件实例对象的 slots property
 function initSlots(instance, children) {
   const { vnode } = instance;
@@ -28,9 +29,10 @@ function normalizeObjectSlots(rawSlots, slots) {
 
       if (typeof value === 'function') {
         // 把这个函数给到slots 对象上存起来
-        slots[key] = props => value(props);
+        slots[key] = props =>
+          createVNode(Fragment, {}, normalizeSlotValue(value(props)));
       } else {
-        slots[key] = value;
+        slots[key] = normalizeSlotValue(value);
       }
     }
   }

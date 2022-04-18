@@ -3,8 +3,8 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-13 23:04:54
- * @LastEditTime: 2022-04-14 00:16:56
- * @FilePath: \mini-vue3\example\Component-slots\App.js
+ * @LastEditTime: 2022-04-18 14:59:15
+ * @FilePath: /mini-vue3/example/Component-slots/App.js
  */
 /*
  * @Author: jun.fu<fujunchn@qq.com>
@@ -28,14 +28,10 @@ const App = {
     return h('div', {}, [
       'app',
       h(Foo, {}, h('p', {}, 'a slot')),
-      h(
-        Bar,
-        {},
-        {
-          header: h('p', {}, 'header slot'),
-          footer: h('p', {}, 'footer slot'),
-        }
-      ),
+      h(Bar, {}, [
+        h('p', { slotName: 'header' }, 'header slot'),
+        h('p', { slotName: 'footer' }, 'footer slot'),
+      ]),
     ]);
 
     // 传入一个 VNode 数组，数组中每一项为一个插槽

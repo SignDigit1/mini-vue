@@ -3,8 +3,8 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-13 23:04:54
- * @LastEditTime: 2022-04-14 00:16:56
- * @FilePath: \mini-vue3\example\Component-slots\App.js
+ * @LastEditTime: 2022-04-18 16:42:43
+ * @FilePath: /mini-vue3/example/Component-slots/App.js
  */
 /*
  * @Author: jun.fu<fujunchn@qq.com>
@@ -17,6 +17,7 @@
 import { h } from '../../lib/mini-vue3.esm.js';
 import { Foo } from './Foo.js';
 import { Bar } from './Bar.js';
+import { Baz } from './Baz.js';
 const App = {
   name: 'App',
   setup() {
@@ -27,13 +28,20 @@ const App = {
 
     return h('div', {}, [
       'app',
-      h(Foo, {}, h('p', {}, 'a slot')),
+      h(Foo, {}, { default: h('p', {}, 'a slot') }),
       h(
         Bar,
         {},
         {
           header: h('p', {}, 'header slot'),
           footer: h('p', {}, 'footer slot'),
+        }
+      ),
+      h(
+        Baz,
+        {},
+        {
+          content: props => h('p', {}, 'content: ' + props.msg),
         }
       ),
     ]);

@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-18 17:12:26
+ * @LastEditTime: 2022-04-18 17:24:41
  * @FilePath: /mini-vue3/src/runtime-core/render.ts
  */
 
@@ -13,7 +13,7 @@ import {
   setupRenderEffect,
 } from './component';
 import { ShapeFlags } from './ShapeFlags';
-import { Fragment, VNode } from './vnode';
+import { Fragment, Text, VNode } from './vnode';
 
 // 用于处理组件对应的 VNode
 function patch(vnode: VNode, container) {
@@ -26,6 +26,10 @@ function patch(vnode: VNode, container) {
   switch (type) {
     case Fragment:
       processFragment(vnode, container);
+      break;
+
+    case Text:
+      processText(vnode, container);
       break;
 
     default:
@@ -43,6 +47,16 @@ function patch(vnode: VNode, container) {
 // 用于处理 Fragment
 function processFragment(vnode: VNode, container) {
   mountChildren(vnode.children, container);
+}
+
+// 用于处理 Text
+function processText(vnode: VNode, container) {
+  // 通过解构赋值获取 Text 对应 VNode 的 children，即文本内容
+  const { children } = vnode;
+  // 利用 document.createTextNode() 创建文本节点
+  const textNode = document.createTextNode(children as string);
+  // 利用 Element.append() 将该节点添加到根容器/其父元素中
+  container.append(textNode);
 }
 
 // 用于处理 Element

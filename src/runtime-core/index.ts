@@ -3,8 +3,9 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:33:41
- * @LastEditTime: 2022-04-11 10:35:52
+ * @LastEditTime: 2022-04-18 17:24:11
  * @FilePath: /mini-vue3/src/runtime-core/index.ts
  */
 export { createApp } from './createApp';
 export { h } from './h';
+export { createTextVNode } from './vnode';

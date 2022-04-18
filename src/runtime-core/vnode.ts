@@ -5,7 +5,7 @@ import { ShapeFlags } from './ShapeFlags';
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 15:53:33
- * @LastEditTime: 2022-04-18 17:11:40
+ * @LastEditTime: 2022-04-18 17:20:01
  * @FilePath: /mini-vue3/src/runtime-core/vnode.ts
  */
 interface VNode {
@@ -26,6 +26,8 @@ function getShapeFlag(type) {
     : ShapeFlags.STATEFUL_COMPONENT;
 }
 const Fragment = Symbol('Fragment');
+
+const Text = Symbol('Text');
 
 function createVNode(type, props?, children?): VNode {
   const vnode = {
@@ -55,4 +57,9 @@ function createVNode(type, props?, children?): VNode {
   return vnode;
 }
 
-export { VNode, createVNode, Fragment };
+// 用于创建 Text 类型的 VNode
+function createTextVNode(text: string) {
+  return createVNode(Text, {}, text);
+}
+
+export { VNode, createVNode, Fragment, Text, createTextVNode };

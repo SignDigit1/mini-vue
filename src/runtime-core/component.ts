@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-13 23:20:40
+ * @LastEditTime: 2022-04-22 00:47:19
  * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
 import { shallowReadonly } from '../reactivity/readonly';
@@ -18,6 +18,19 @@ interface Component {
   vnode: VNode;
   type: string | object | Function;
   setupState: Object;
+}
+
+// 用于保存当前组件实例对象
+let currentInstance = null;
+
+// 用于获取当前组件的实例对象
+function getCurrentInstance() {
+  return currentInstance;
+}
+
+// 用于给全局变量 currentInstance 赋值
+function setCurrentInstance(instance) {
+  currentInstance = instance;
 }
 
 function createComponentInstance(vnode: VNode): Component {
@@ -58,12 +71,20 @@ function setupStatefulComponent(instance) {
 
   // 若组件选项对象中包含 setup 方法则调用该方法并处理其返回值
   if (setup) {
+        // 将全局变量 currentInstance 赋值为当前组件实例对象
+
+    setCurrentInstance(instance);
     // 调用 setup 传入 props 对象的 shallowReactive 响应式副本和包含 emit 方法的对象并获取其返回值
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit,
     });
+
+     // 将全局变量 currentInstance 赋值为 null
+    setCurrentInstance(null);
+
     // 处理 setup 方法的返回值
     handleSetupResult(instance, setupResult);
+   
   }
 }
 
@@ -105,4 +126,9 @@ function setupRenderEffect(instance, vnode, container) {
   vnode.el = subTree.el;
 }
 
-export { createComponentInstance, setupComponent, setupRenderEffect };
+export {
+  createComponentInstance,
+  setupComponent,
+  setupRenderEffect,
+  getCurrentInstance,
+};

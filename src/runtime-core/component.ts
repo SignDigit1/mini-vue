@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-24 01:10:09
+ * @LastEditTime: 2022-04-24 01:43:39
  * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
 import { shallowReadonly } from '../reactivity/readonly';
@@ -11,7 +11,6 @@ import { emit } from './componentEmit';
 import { initProps } from './componentProps';
 import { initSlots } from './componentSlots';
 import { PublicInstanceHandlers } from './componentPublicInstance';
-import { patch } from './render';
 import { VNode } from './vnode';
 
 interface Component {
@@ -115,21 +114,10 @@ function finishComponentSetup(instance) {
   }
 }
 
-function setupRenderEffect(instance, vnode, container) {
-  // 通过解构赋值获取组件实例对象的 proxy property
-  const { proxy } = instance;
-  // 调用组件实例对象中 render 函数获取 VNode 树
-  const subTree = instance.render.call(proxy);
 
-  patch(subTree, container, instance);
-
-  // 将 VNode 树的 el property 赋值给 VNode 的 el property
-  vnode.el = subTree.el;
-}
 
 export {
   createComponentInstance,
   setupComponent,
-  setupRenderEffect,
   getCurrentInstance,
 };

@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-22 00:47:19
+ * @LastEditTime: 2022-04-24 01:10:09
  * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
 import { shallowReadonly } from '../reactivity/readonly';
@@ -33,7 +33,7 @@ function setCurrentInstance(instance) {
   currentInstance = instance;
 }
 
-function createComponentInstance(vnode: VNode): Component {
+function createComponentInstance(vnode: VNode, parent): Component {
   const component = {
     vnode,
     type: vnode.type,
@@ -41,6 +41,8 @@ function createComponentInstance(vnode: VNode): Component {
     props: {},
     emit: () => {},
     slots: {},
+    provides: parent ? parent.provides : {},
+    parent,
   };
 
   // 通过 Function.prototype.bind() 将 emit 函数第一个参数指定为组件实例对象，将新函数挂载到组件实例对象上
@@ -71,7 +73,7 @@ function setupStatefulComponent(instance) {
 
   // 若组件选项对象中包含 setup 方法则调用该方法并处理其返回值
   if (setup) {
-        // 将全局变量 currentInstance 赋值为当前组件实例对象
+    // 将全局变量 currentInstance 赋值为当前组件实例对象
 
     setCurrentInstance(instance);
     // 调用 setup 传入 props 对象的 shallowReactive 响应式副本和包含 emit 方法的对象并获取其返回值
@@ -79,12 +81,11 @@ function setupStatefulComponent(instance) {
       emit: instance.emit,
     });
 
-     // 将全局变量 currentInstance 赋值为 null
+    // 将全局变量 currentInstance 赋值为 null
     setCurrentInstance(null);
 
     // 处理 setup 方法的返回值
     handleSetupResult(instance, setupResult);
-   
   }
 }
 
@@ -120,7 +121,7 @@ function setupRenderEffect(instance, vnode, container) {
   // 调用组件实例对象中 render 函数获取 VNode 树
   const subTree = instance.render.call(proxy);
 
-  patch(subTree, container);
+  patch(subTree, container, instance);
 
   // 将 VNode 树的 el property 赋值给 VNode 的 el property
   vnode.el = subTree.el;

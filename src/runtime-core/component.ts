@@ -3,10 +3,10 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-24 01:43:39
+ * @LastEditTime: 2022-04-24 16:14:30
  * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
-import { shallowReadonly } from '../reactivity/readonly';
+import { shallowReadonly, proxyRefs } from '../reactivity/index';
 import { emit } from './componentEmit';
 import { initProps } from './componentProps';
 import { initSlots } from './componentSlots';
@@ -42,6 +42,8 @@ function createComponentInstance(vnode: VNode, parent): Component {
     slots: {},
     provides: parent ? parent.provides : {},
     parent,
+    subTree: {},
+    isMounted: false,
   };
 
   // 通过 Function.prototype.bind() 将 emit 函数第一个参数指定为组件实例对象，将新函数挂载到组件实例对象上
@@ -93,7 +95,7 @@ function handleSetupResult(instance, setupResult) {
   // 根据 setup 方法返回值类型的不同进行不同的处理
   // 若返回一个 object 则将其注入到组件的上下文中
   if (typeof setupResult === 'object') {
-    instance.setupState = setupResult;
+    instance.setupState = proxyRefs(setupResult);
   }
   // 若返回一个 function 则将其作为组件的 render 函数
   else if (typeof setupResult === 'function') {
@@ -114,10 +116,4 @@ function finishComponentSetup(instance) {
   }
 }
 
-
-
-export {
-  createComponentInstance,
-  setupComponent,
-  getCurrentInstance,
-};
+export { createComponentInstance, setupComponent, getCurrentInstance };

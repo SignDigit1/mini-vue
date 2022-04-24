@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-24 17:44:30
+ * @LastEditTime: 2022-04-24 21:13:29
  * @FilePath: \mini-vue3\src\runtime-core\render.ts
  */
 
@@ -20,6 +20,8 @@ function createRenderer(options) {
     createElement: hostCreateElement,
     patchProp: hostPatchProp,
     insert: hostInsert,
+    remove: hostRemove,
+    setElementText: hostSetElementText,
   } = options;
 
   // 用于处理组件对应的 VNode
@@ -88,7 +90,7 @@ function createRenderer(options) {
       mountElement(newVnode, container, parentComponent);
     } else {
       // 否则进行 Element 的更新
-      patchElement(preVnode, newVnode, parentComponent);
+      patchElement(preVnode, newVnode, container, parentComponent);
     }
   }
 
@@ -107,7 +109,7 @@ function createRenderer(options) {
     // 根据 Element 对应 VNode 的 type property 创建 DOM 元素并赋值给变量 el
     const el = (vnode.el = hostCreateElement(vnode.type));
 
-    // 通过解构赋值获取 Element 对应 VNode 的 props property 和 children property
+    // 通过解构赋值获取 Element 对应 VNode 的 props property 和 children
     const { props, children, shapeFlag } = vnode;
 
     // 遍历 props，利用 Element.setAttribute() 将其中的 property 添加到 el 上
@@ -130,7 +132,12 @@ function createRenderer(options) {
     hostInsert(el, container);
   }
 
-  function patchElement(preVNode: VNode, newVNode: VNode, container) {
+  function patchElement(
+    preVNode: VNode,
+    newVNode: VNode,
+    container,
+    parentComponent
+  ) {
     // TODO: 实现 patchElement 函数
     const oldProps = preVNode.props || {};
     const newProps = newVNode.props || {};
@@ -138,7 +145,51 @@ function createRenderer(options) {
     // 将旧 VNode 的 el property 挂载到新 VNode 上
     const el = (newVNode.el = preVNode.el);
 
+    patchChildren(preVNode, newVNode, el, parentComponent);
     patchProps(el, oldProps, newProps);
+  }
+
+  function patchChildren(preVnode, newVnode, container, parentComponent) {
+    // 通过结构赋值分别获得新旧 VNode 的 children 和 shapeFlag property
+    const { children: c1, shapeFlag: prevShapeFlag } = preVnode;
+    const { children: c2, shapeFlag: nextShapeFlag } = newVnode;
+
+    // 若新 VNode 的 children 类型为 string
+    if (nextShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      // 同时旧 VNode 的 children 类型为 Array
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 移除旧 VNode 的 children
+        unmountChildren(c1);
+      }
+
+      // 若新旧 VNode 的 children 不同
+      if (c1 !== c2) {
+        // 将根容器/父元素的文本内容设置为新 VNode 的 children
+        hostSetElementText(container, c2);
+      }
+    } // 若新 VNode 的 children 类型为 Array
+    else if (nextShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+      // 同时旧 VNode 的 children 类型为 string
+      if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        // 将根容器/父元素的文本内容设置为空字符串
+        hostSetElementText(container, '');
+
+        // 将新 VNode 的 children 添加到根容器/父元素中
+        mountChildren(c2, container, parentComponent);
+      }
+      // 同时旧 VNode 的 children 类型为 Array
+      else {
+        // TODO: Array2Array
+      }
+    }
+  }
+
+  // 用于遍历 children，移除其中的所有 VNode
+  function unmountChildren(children) {
+    for (const child of children) {
+      // 移除 VNode
+      hostRemove(child);
+    }
   }
 
   function patchProps(el, oldProps, newProps) {

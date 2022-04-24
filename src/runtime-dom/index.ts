@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-24 01:35:59
- * @LastEditTime: 2022-04-24 17:46:45
+ * @LastEditTime: 2022-04-24 21:14:24
  * @FilePath: \mini-vue3\src\runtime-dom\index.ts
  */
 import { createRenderer } from '../runtime-core/index';
@@ -50,12 +50,30 @@ function createText(text) {
   return document.createTextNode(text);
 }
 
+// 用于移除元素
+function remove(child) {
+  // 获取当前元素的父元素
+  const parent = child.parentNode;
+
+  if (parent) {
+    // 利用 Element.removeChild() 将元素从其父元素中移除
+    parent.removeChild(child);
+  }
+}
+
+// 用于修改元素的文本内容
+function setElementText(el, text) {
+  el.textContent = text;
+}
+
 // 调用 createRenderer 函数，并传入包含 createText 函数、createElement 函数、patchProp 函数和 insert 函数的对象
 const renderer: any = createRenderer({
   createElement,
   patchProp,
   insert,
   createText,
+  remove,
+  setElementText,
 });
 
 // 用于创建应用实例

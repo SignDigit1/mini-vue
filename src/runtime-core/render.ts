@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-24 21:13:29
+ * @LastEditTime: 2022-04-25 01:34:22
  * @FilePath: \mini-vue3\src\runtime-core\render.ts
  */
 
@@ -29,7 +29,8 @@ function createRenderer(options) {
     preVnode: VNode | null,
     newVnode: VNode,
     container,
-    parentComponent
+    parentComponent,
+    anchor
   ) {
     // 根据 VNode 类型的不同调用不同的函数
     // 通过 VNode shapeFlag property 与枚举变量 ShapeFlags 进行与运算来判断 VNode 类型
@@ -39,7 +40,7 @@ function createRenderer(options) {
     // 通过 VNode 的 type property 判断 VNode 类型是 Fragment 或其他
     switch (type) {
       case Fragment:
-        processFragment(preVnode, newVnode, container, parentComponent);
+        processFragment(preVnode, newVnode, container, parentComponent, anchor);
         break;
 
       case Text:
@@ -48,11 +49,23 @@ function createRenderer(options) {
 
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
-          processElement(preVnode, newVnode, container, parentComponent);
+          processElement(
+            preVnode,
+            newVnode,
+            container,
+            parentComponent,
+            anchor
+          );
         }
         // 若 type property 的类型是 object，则 VNode 类型是 Component
         else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-          processComponent(preVnode, newVnode, container, parentComponent);
+          processComponent(
+            preVnode,
+            newVnode,
+            container,
+            parentComponent,
+            anchor
+          );
         }
         break;
     }
@@ -63,9 +76,10 @@ function createRenderer(options) {
     preVnode: VNode | null,
     newVnode: VNode,
     container,
-    parentComponent
+    parentComponent,
+    anchor
   ) {
-    mountChildren(newVnode.children, container, parentComponent);
+    mountChildren(newVnode.children, container, parentComponent, anchor);
   }
 
   // 用于处理 Text
@@ -83,14 +97,15 @@ function createRenderer(options) {
     preVnode: VNode | null,
     newVnode: VNode,
     container,
-    parentComponent
+    parentComponent,
+    anchor
   ) {
     if (!preVnode) {
       // 若旧 VNode 不存在则进行新 Element 的初始化
-      mountElement(newVnode, container, parentComponent);
+      mountElement(newVnode, container, parentComponent, anchor);
     } else {
       // 否则进行 Element 的更新
-      patchElement(preVnode, newVnode, container, parentComponent);
+      patchElement(preVnode, newVnode, container, parentComponent, anchor);
     }
   }
 
@@ -99,13 +114,14 @@ function createRenderer(options) {
     preVnode: VNode | null,
     newVnode: VNode,
     container,
-    parentComponent
+    parentComponent,
+    anchor
   ) {
-    mountComponent(newVnode, container, parentComponent);
+    mountComponent(newVnode, container, parentComponent, anchor);
   }
 
   // 用于进行 Element 的初始化
-  function mountElement(vnode, container, parentComponent) {
+  function mountElement(vnode, container, parentComponent, anchor) {
     // 根据 Element 对应 VNode 的 type property 创建 DOM 元素并赋值给变量 el
     const el = (vnode.el = hostCreateElement(vnode.type));
 
@@ -125,7 +141,7 @@ function createRenderer(options) {
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
       el.textContent = children;
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-      mountChildren(children, el, parentComponent);
+      mountChildren(children, el, parentComponent, anchor);
     }
 
     // 利用 Element.append() 将 el 添加到根容器/其父元素中
@@ -136,7 +152,8 @@ function createRenderer(options) {
     preVNode: VNode,
     newVNode: VNode,
     container,
-    parentComponent
+    parentComponent,
+    anchor
   ) {
     // TODO: 实现 patchElement 函数
     const oldProps = preVNode.props || {};
@@ -145,11 +162,17 @@ function createRenderer(options) {
     // 将旧 VNode 的 el property 挂载到新 VNode 上
     const el = (newVNode.el = preVNode.el);
 
-    patchChildren(preVNode, newVNode, el, parentComponent);
+    patchChildren(preVNode, newVNode, el, parentComponent, anchor);
     patchProps(el, oldProps, newProps);
   }
 
-  function patchChildren(preVnode, newVnode, container, parentComponent) {
+  function patchChildren(
+    preVnode,
+    newVnode,
+    container,
+    parentComponent,
+    anchor
+  ) {
     // 通过结构赋值分别获得新旧 VNode 的 children 和 shapeFlag property
     const { children: c1, shapeFlag: prevShapeFlag } = preVnode;
     const { children: c2, shapeFlag: nextShapeFlag } = newVnode;
@@ -175,7 +198,7 @@ function createRenderer(options) {
         hostSetElementText(container, '');
 
         // 将新 VNode 的 children 添加到根容器/父元素中
-        mountChildren(c2, container, parentComponent);
+        mountChildren(c2, container, parentComponent, anchor);
       }
       // 同时旧 VNode 的 children 类型为 Array
       else {
@@ -183,6 +206,14 @@ function createRenderer(options) {
       }
     }
   }
+
+  function patchKeyedChildren(
+    preVnode,
+    newVnode,
+    container,
+    parentComponent,
+    anchor
+  ) {}
 
   // 用于遍历 children，移除其中的所有 VNode
   function unmountChildren(children) {
@@ -220,21 +251,21 @@ function createRenderer(options) {
   }
 
   // 用于遍历 children，对其中每个 VNode 调用 patch 方法进行处理
-  function mountChildren(children, container, parentComponent) {
+  function mountChildren(children, container, parentComponent, anchor) {
     children.forEach(child => {
-      patch(null, child, container, parentComponent);
+      patch(null, child, container, parentComponent, anchor);
     });
   }
 
   // 用于进行 Component 的初始化
-  function mountComponent(vnode: VNode, container, parentComponent) {
+  function mountComponent(vnode: VNode, container, parentComponent, anchor) {
     // 通过组件对应的 VNode 创建组件实例对象，用于挂载 props、slots 等
     const instance = createComponentInstance(vnode, parentComponent);
     setupComponent(instance);
-    setupRenderEffect(instance, vnode, container);
+    setupRenderEffect(instance, vnode, container, anchor);
   }
 
-  function setupRenderEffect(instance, vnode, container) {
+  function setupRenderEffect(instance, vnode, container, anchor) {
     // 利用 effect 将调用 render 函数和 patch 方法的操作收集
     effect(() => {
       // 根据组件实例对象的 isMounted property 判断是初始化或更新 VNode 树
@@ -245,7 +276,7 @@ function createRenderer(options) {
         // 调用组件实例对象中 render 函数获取 VNode 树
         const subTree = (instance.subTree = instance.render.call(proxy));
 
-        patch(null, subTree, container, instance);
+        patch(null, subTree, container, instance, anchor);
 
         // 将 VNode 树的 el property 赋值给 VNode 的 el property
         vnode.el = subTree.el;
@@ -259,13 +290,13 @@ function createRenderer(options) {
         const subTree = (instance.subTree = instance.render.call(proxy));
 
         // 调用 patch 方法处理新旧 VNode 树
-        patch(preSubTree, subTree, container, instance);
+        patch(preSubTree, subTree, container, instance, anchor);
       }
     });
   }
 
   function render(vnode: VNode, container) {
-    patch(null, vnode, container, null);
+    patch(null, vnode, container, null, null);
   }
 
   return {
@@ -274,3 +305,49 @@ function createRenderer(options) {
 }
 
 export { createRenderer };
+
+/**
+ * 获取最长递增子序列
+ * @param arr
+ * @returns
+ */
+function getSequence(arr: number[]): number[] {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
+}

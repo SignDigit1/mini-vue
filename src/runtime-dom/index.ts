@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-24 01:35:59
- * @LastEditTime: 2022-04-24 21:14:24
+ * @LastEditTime: 2022-04-25 01:34:59
  * @FilePath: \mini-vue3\src\runtime-dom\index.ts
  */
 import { createRenderer } from '../runtime-core/index';
@@ -39,9 +39,9 @@ function patchProp(el, key, nextVal) {
 }
 
 // 用于将元素添加到根容器/父元素中
-function insert(el, parent) {
+function insert(el, parent, anchor = null) {
   // 利用 Element.append() 将元素添加到根容器/父元素中
-  parent.append(el);
+  parent.insertBefore(el, anchor);
 }
 
 // 用于创建文本节点

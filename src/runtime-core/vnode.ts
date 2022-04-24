@@ -5,8 +5,8 @@ import { ShapeFlags } from './ShapeFlags';
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 15:53:33
- * @LastEditTime: 2022-04-18 17:20:01
- * @FilePath: /mini-vue3/src/runtime-core/vnode.ts
+ * @LastEditTime: 2022-04-24 21:21:11
+ * @FilePath: \mini-vue3\src\runtime-core\vnode.ts
  */
 interface VNode {
   /* HTML 标签名、组件、异步组件或函数式组件。使用返回 null 的函数将渲染一个注释。此参数是必需的。 */
@@ -37,7 +37,10 @@ function createVNode(type, props?, children?): VNode {
     props,
     // 对应组件的根元素
     children,
+    // VNode 和 children 类型的标志位
     shapeFlag: getShapeFlag(type),
+    // 对应组件的 key attribute
+    key: props?.key,
   };
 
   // 根据 children 的类型设置 shapeFlag 对应的位

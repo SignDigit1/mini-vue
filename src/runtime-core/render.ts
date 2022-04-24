@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-24 17:06:29
+ * @LastEditTime: 2022-04-24 17:44:30
  * @FilePath: \mini-vue3\src\runtime-core\render.ts
  */
 
@@ -132,7 +132,40 @@ function createRenderer(options) {
 
   function patchElement(preVNode: VNode, newVNode: VNode, container) {
     // TODO: 实现 patchElement 函数
-    console.log('update');
+    const oldProps = preVNode.props || {};
+    const newProps = newVNode.props || {};
+
+    // 将旧 VNode 的 el property 挂载到新 VNode 上
+    const el = (newVNode.el = preVNode.el);
+
+    patchProps(el, oldProps, newProps);
+  }
+
+  function patchProps(el, oldProps, newProps) {
+    if (oldProps !== newProps) {
+      // 遍历新 VNode 的 props 对象
+      for (const key in newProps) {
+        const prev = oldProps[key];
+        const next = newProps[key];
+
+        // 若新旧 VNode 的 props 对象中的 property 或方法不相等
+        if (prev !== next) {
+          // 将新 VNode 的 property 或方法挂载到元素上
+          hostPatchProp(el, key, next);
+        }
+
+        if (oldProps !== {}) {
+          // 遍历旧 VNode 的 props 对象
+          for (const key in oldProps) {
+            // 若新 VNode 的 props 对象中不包含该 property 或方法
+            if (!(key in newProps)) {
+              // 将元素上该 property 或方法赋值为 null
+              hostPatchProp(el, key, null);
+            }
+          }
+        }
+      }
+    }
   }
 
   // 用于遍历 children，对其中每个 VNode 调用 patch 方法进行处理

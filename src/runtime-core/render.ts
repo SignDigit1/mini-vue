@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-25 01:34:22
+ * @LastEditTime: 2022-04-26 01:34:22
  * @FilePath: \mini-vue3\src\runtime-core\render.ts
  */
 
@@ -145,7 +145,7 @@ function createRenderer(options) {
     }
 
     // 利用 Element.append() 将 el 添加到根容器/其父元素中
-    hostInsert(el, container);
+    hostInsert(el, container, anchor);
   }
 
   function patchElement(
@@ -203,17 +203,204 @@ function createRenderer(options) {
       // 同时旧 VNode 的 children 类型为 Array
       else {
         // TODO: Array2Array
+        patchKeyedChildren(c1, c2, container, parentComponent, anchor);
       }
     }
   }
 
   function patchKeyedChildren(
-    preVnode,
-    newVnode,
+    preTree,
+    newTree,
     container,
     parentComponent,
-    anchor
-  ) {}
+    parentAnchor
+  ) {
+    const l2 = newTree.length;
+    // 用于双端对比的指针（索引）
+
+    let i = 0;
+    let e1 = preTree.length - 1;
+    let e2 = l2 - 1;
+
+    // 用于判断两个元素是否是同一 VNode
+    function isSameVNodeType(n1, n2) {
+      // 若 type property 和 key property 均相同则返回 true
+      return n1.type === n2.type && n1.key === n2.key;
+    }
+
+    // 从头遍历
+    while (i <= e1 && i <= e2) {
+      const n1 = preTree[i];
+      const n2 = newTree[i];
+      // 若两个元素是同一 VNode 则对其调用 patch 方法进行更新
+      if (isSameVNodeType(n1, n2)) {
+        patch(n1, n2, container, parentComponent, parentAnchor);
+      } else {
+        // 否则结束遍历，此时 i 为从头遍历时差异位置在两个数组中的索引
+        break;
+      }
+      i++;
+    }
+
+    while (i <= e1 && i <= e2) {
+      const n1 = preTree[e1];
+      const n2 = newTree[e2];
+      if (isSameVNodeType(n1, n2)) {
+        patch(n1, n2, container, parentComponent, parentAnchor);
+      } else {
+        // 否则结束遍历，此时 i 为从头遍历时差异位置在两个数组中的索引
+        break;
+      }
+      e1--;
+      e2--;
+    }
+
+    // 若 i > e1 则说明新的数组比旧的长，将多出的元素依次向旧的中插入
+    if (i > e1) {
+      if (i <= e2) {
+        // 要插入位置的下一个元素的索引是 e2+1
+        const nextPos = e2 + 1;
+        // 若 e2+1 小于新的数组长度，则锚点为新的数组中索引为 e2+1 的 VNode 的 el property，否则为 null
+        const anchor = nextPos < l2 ? newTree[nextPos].el : null;
+
+        // 依次对子数组[i,e2]中的 VNode 调用 patch 方法进行插入
+        while (i <= e2) {
+          patch(null, newTree[i], container, parentComponent, anchor);
+
+          i++;
+        }
+      }
+    }
+    // 若 i > e2 则说明旧的数组比新的长，将多出的元素依次从旧的中移除
+    else if (i > e2) {
+      // 依次移除子数组[i,e1]中的 VNode
+      while (i <= e1) {
+        hostRemove(preTree[i].el);
+
+        i++;
+      }
+    }
+    // 若 i <= e1 且 i <= e2 则说明子数组[i,e1]和子数组[i,e2]有差异
+    else {
+      let s = i;
+      // 用于保存需要调用 patch 方法的次数
+      const toBePatched = e2 - s + 1;
+      // 用于记录调用 patch 方法的次数
+      let patched = 0;
+      // 用于保存子数组[i,e2]中元素的索引，key 为 VNode 的 key property，value 为索引
+      const keyToNewIndexMap = new Map();
+      // 用于保存子数组[i,e2]中元素在旧的数组中的索引，默认为 0，在保存时加 1
+      const newIndexToOldIndexMap = new Array(toBePatched).fill(0);
+      // 用于标志是否存在元素移动
+      let moved = false;
+      // 用于保存遍历子数组[i,e1]时其中元素在新的数组中的最大索引
+      let maxNewIndexSoFar = 0;
+
+      // 遍历子数组[i,e2]，保存其中元素的索引
+      for (let i = s; i <= e2; i++) {
+        const nextChild = newTree[i];
+
+        keyToNewIndexMap.set(nextChild.key, i);
+      }
+
+      for (let i = s; i <= e1; i++) {
+        const prevChild = preTree[i];
+
+        // 若 patched 大于等于 toBePatched，则说明当前元素是要移除的元素，可直接移除
+        if (patched >= toBePatched) {
+          hostRemove(prevChild.el);
+
+          continue;
+        }
+
+        let newIndex;
+        // 若当前元素包含 key property，则从 keyToNewIndexMap 中获取其在新的数组中的索引
+        if (prevChild.key != null) {
+          newIndex = keyToNewIndexMap.get(prevChild.key);
+        }
+        // 否则
+        else {
+          // 遍历子数组[i,e2]获取其索引
+          for (let j = s; j <= e2; j++) {
+            if (isSameVNodeType(prevChild, newTree[j])) {
+              newIndex = j;
+
+              break;
+            }
+          }
+        }
+
+        // 若当前元素在新的数组中的索引不存在则其不在新的数组中，可直接移除
+        if (newIndex === undefined) {
+          hostRemove(prevChild.el);
+        }
+        // 否则对当前元素调用 patch 方法进行更新
+        else {
+          // 若当前元素在新的数组中的索引大于等于 maxNewIndexSoFar，则更新后者
+          if (newIndex >= maxNewIndexSoFar) {
+            maxNewIndexSoFar = newIndex;
+          }
+          // 否则说明存在元素移动，将 moved 的值变为 true
+          else {
+            moved = true;
+          }
+
+          // 保存当前元素在旧的数组中的索引
+          newIndexToOldIndexMap[newIndex - s] = i + 1;
+
+          // 对当前元素调用 patch 方法进行更新
+          patch(prevChild, newTree[newIndex], container, parentComponent, null);
+        }
+      }
+
+      /**
+       * 用于保存最长递增子序列
+       * 若 moved 为 true 则存在元素移动
+       * 通过 getSequence() 函数获取 newIndexToOldIndexMap 的最长递增子序列
+       */
+      const increasingNewIndexSequence = moved
+        ? getSequence(newIndexToOldIndexMap)
+        : [];
+
+      // 用于倒序遍历最长递增子序列
+      let j = increasingNewIndexSequence.length - 1;
+      // 倒序遍历子数组[i,e2]，依次进行处理
+      for (let i = toBePatched - 1; i >= 0; i--) {
+        // 用于保存当前元素在新的数组中的索引
+        const nextIndex = i + s;
+        const nextChild = newTree[nextIndex];
+
+        /**
+         * 若 nextIndex+1 小于新的数组长度
+         * 则锚点为新的数组中索引为 nextIndex+1 的 VNode 的 el property
+         * 否则为 null
+         */
+        const anchor = newTree[nextIndex + 1]?.el;
+
+        /**
+         * 若在 newIndexToOldIndexMap 中当前元素在子数组[i,e2]索引对应的值为 0
+         * 则说明该元素不在旧的数组中，对其调用 patch 方法进行插入
+         */
+        if (newIndexToOldIndexMap[i] === 0) {
+          patch(null, nextChild, container, parentComponent, anchor);
+        }
+        // 若存在元素移动
+        else if (moved) {
+          /**
+           * 若 j 小于 0，即最长递增子序列已遍历完
+           * 或者当前元素在子数组[i,e2]索引与最长递增子序列中索引为 j 的值不相等
+           * 则说明当前元素是要移动的元素
+           */
+          if (j < 0 || i !== increasingNewIndexSequence[j]) {
+            // 将当前元素插入到其要移动到的位置
+            hostInsert(nextChild.el, container, anchor);
+          } else {
+            j--;
+          }
+        }
+      }
+    }
+  }
 
   // 用于遍历 children，移除其中的所有 VNode
   function unmountChildren(children) {

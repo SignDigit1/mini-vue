@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 10:01:52
- * @LastEditTime: 2022-04-24 16:14:30
+ * @LastEditTime: 2022-04-26 02:03:15
  * @FilePath: \mini-vue3\src\runtime-core\component.ts
  */
 import { shallowReadonly, proxyRefs } from '../reactivity/index';
@@ -44,6 +44,9 @@ function createComponentInstance(vnode: VNode, parent): Component {
     parent,
     subTree: {},
     isMounted: false,
+    update: () => {},
+    next: null,
+    proxy: null,
   };
 
   // 通过 Function.prototype.bind() 将 emit 函数第一个参数指定为组件实例对象，将新函数挂载到组件实例对象上

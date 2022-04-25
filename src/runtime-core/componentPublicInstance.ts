@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-11 18:10:10
- * @LastEditTime: 2022-04-13 23:29:13
+ * @LastEditTime: 2022-04-26 02:01:15
  * @FilePath: \mini-vue3\src\runtime-core\componentPublicInstance.ts
  */
 
@@ -13,6 +13,7 @@ import { hasOwn } from '../shared/index';
 const publicPropertiesMap = {
   $el: i => i.vnode.el,
   $slots: i => i.slots,
+  $props: i => i.props,
 };
 
 const PublicInstanceHandlers = {

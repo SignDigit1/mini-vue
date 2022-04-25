@@ -3,12 +3,13 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-26 01:34:22
+ * @LastEditTime: 2022-04-26 02:21:23
  * @FilePath: \mini-vue3\src\runtime-core\render.ts
  */
 
 import { effect } from '../reactivity/index';
 import { createComponentInstance, setupComponent } from './component';
+import { shouldUpdateComponent } from './componentUpdateUtils';
 import { createAppAPI } from './createApp';
 import { ShapeFlags } from './ShapeFlags';
 import { Fragment, Text, VNode } from './vnode';
@@ -117,7 +118,10 @@ function createRenderer(options) {
     parentComponent,
     anchor
   ) {
-    mountComponent(newVnode, container, parentComponent, anchor);
+    if (!preVnode) mountComponent(newVnode, container, parentComponent, anchor);
+    else {
+      updateComponent(preVnode, newVnode);
+    }
   }
 
   // 用于进行 Element 的初始化
@@ -447,14 +451,37 @@ function createRenderer(options) {
   // 用于进行 Component 的初始化
   function mountComponent(vnode: VNode, container, parentComponent, anchor) {
     // 通过组件对应的 VNode 创建组件实例对象，用于挂载 props、slots 等
-    const instance = createComponentInstance(vnode, parentComponent);
+    const instance = (vnode.component = createComponentInstance(
+      vnode,
+      parentComponent
+    ));
     setupComponent(instance);
     setupRenderEffect(instance, vnode, container, anchor);
   }
 
+  // 用于更新 Component
+  function updateComponent(preVnode, newVnode) {
+    // 获取旧 VNode 对应组件实例对象并将其挂载到新 VNode 上
+    const instance = (newVnode.component = preVnode.component);
+    // 若需要更新组件
+    if (shouldUpdateComponent(preVnode, newVnode)) {
+      // 将新 VNode 挂载到组件实例对象上
+      instance.next = newVnode;
+      // 调用组件实例对象的 update 方法
+      instance.update();
+    }
+    // 否则
+    else {
+      // 将旧 VNode 的 el property 挂载到新 VNode 上
+      newVnode.el = preVnode.el;
+      // 将新 VNode 挂载到组件实例对象上
+      instance.vnode = newVnode;
+    }
+  }
+
   function setupRenderEffect(instance, vnode, container, anchor) {
     // 利用 effect 将调用 render 函数和 patch 方法的操作收集
-    effect(() => {
+    instance.update = effect(() => {
       // 根据组件实例对象的 isMounted property 判断是初始化或更新 VNode 树
       // 若为 false 则是初始化
       if (!instance.isMounted) {
@@ -470,8 +497,15 @@ function createRenderer(options) {
 
         instance.isMounted = true;
       } else {
-        // 通过解构赋值获取组件实例对象的 proxy property 和旧 VNode 树
-        const { proxy, subTree: preSubTree } = instance;
+        // 通过解构赋值获取组件对应新旧 VNode 以及组件实例对象的 proxy property 和旧 VNode 树
+        const { next, vnode, proxy, subTree: preSubTree } = instance;
+
+        if (next) {
+          // 将旧 VNode 的 el property 挂载到新 VNode 上
+          next.el = vnode.el;
+
+          updateComponentPreRender(instance, next);
+        }
 
         // 调用组件实例对象中 render 函数获取新 VNode 树，同时将 this 指向指定为 proxy property
         const subTree = (instance.subTree = instance.render.call(proxy));
@@ -537,4 +571,11 @@ function getSequence(arr: number[]): number[] {
     v = p[v];
   }
   return result;
+}
+
+// 用于更新组件实例对象的 property
+function updateComponentPreRender(instance, nextVNode) {
+  instance.vnode = nextVNode;
+  instance.next = null;
+  instance.props = nextVNode.props;
 }

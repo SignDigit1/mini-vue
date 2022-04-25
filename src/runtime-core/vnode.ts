@@ -5,7 +5,7 @@ import { ShapeFlags } from './ShapeFlags';
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 15:53:33
- * @LastEditTime: 2022-04-24 21:21:11
+ * @LastEditTime: 2022-04-26 02:07:48
  * @FilePath: \mini-vue3\src\runtime-core\vnode.ts
  */
 interface VNode {
@@ -17,6 +17,7 @@ interface VNode {
   children: string | Array<VNode> | object;
   el?: Element;
   shapeFlag: number;
+  component?: object;
 }
 
 // 用于根据 VNode 的 type property 设置 shapeFlag 对应的位

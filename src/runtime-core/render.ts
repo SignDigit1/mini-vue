@@ -3,7 +3,7 @@
  * @LastEditors: jun.fu<fujunchn@qq.com>
  * @Description: file content
  * @Date: 2022-04-08 16:04:11
- * @LastEditTime: 2022-04-26 02:21:23
+ * @LastEditTime: 2022-04-26 23:29:49
  * @FilePath: \mini-vue3\src\runtime-core\render.ts
  */
 
@@ -11,6 +11,7 @@ import { effect } from '../reactivity/index';
 import { createComponentInstance, setupComponent } from './component';
 import { shouldUpdateComponent } from './componentUpdateUtils';
 import { createAppAPI } from './createApp';
+import { queueJobs } from './scheduler';
 import { ShapeFlags } from './ShapeFlags';
 import { Fragment, Text, VNode } from './vnode';
 
@@ -480,8 +481,7 @@ function createRenderer(options) {
   }
 
   function setupRenderEffect(instance, vnode, container, anchor) {
-    // 利用 effect 将调用 render 函数和 patch 方法的操作收集
-    instance.update = effect(() => {
+    function componentUpdateFn() {
       // 根据组件实例对象的 isMounted property 判断是初始化或更新 VNode 树
       // 若为 false 则是初始化
       if (!instance.isMounted) {
@@ -513,6 +513,11 @@ function createRenderer(options) {
         // 调用 patch 方法处理新旧 VNode 树
         patch(preSubTree, subTree, container, instance, anchor);
       }
+    }
+    // 利用 effect 将调用 render 函数和 patch 方法的操作收集
+    instance.update = effect(componentUpdateFn, {
+      // 把 effect 推到微任务的时候在执行
+      scheduler: () => queueJobs(instance.update),
     });
   }
 
